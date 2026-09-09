@@ -1,17 +1,12 @@
 <template>
-  <main class="card">
+  <main class="card" :class="{ 'card-auth': !currentUser }">
     <header class="app-header">
-      <div class="header-top-row">
-        <div v-if="currentUser" class="user-session-badge">
+      <div v-if="currentUser" class="header-top-row">
+        <div class="user-session-badge">
           <span class="user-avatar-icon">👤</span>
           <span class="user-name">{{ currentUser.username }}</span>
           <button type="button" class="btn-logout" @click="handleLogout" title="Đăng xuất">
             Đăng xuất
-          </button>
-        </div>
-        <div v-else class="user-session-badge login-trigger-badge">
-          <button type="button" class="btn-login-trigger" @click="openAuthModal('login')">
-            🔑 Đăng nhập / Đăng ký
           </button>
         </div>
       </div>
@@ -22,110 +17,115 @@
       <p class="app-subtitle">Theo dõi thói quen & quản lý tiến độ từng ngày</p>
     </header>
 
-    <!-- Navigation Tabs: Tracker vs Dashboard -->
-    <nav class="view-tabs">
-      <button
-        type="button"
-        class="tab-btn"
-        :class="{ active: activeTab === 'tracker' }"
-        @click="activeTab = 'tracker'"
-      >
-        📅 Theo dõi ngày
-      </button>
-      <button
-        type="button"
-        class="tab-btn"
-        :class="{ active: activeTab === 'dashboard' }"
-        @click="switchTab('dashboard')"
-      >
-        📊 Báo cáo & Thống kê
-      </button>
-    </nav>
-
-    <!-- Error Alert banner -->
-    <div v-if="errorMessage" class="alert-box alert-error">
-      {{ errorMessage }}
+    <!-- CASE 1: NOT AUTHENTICATED -> Regis/Login panel directly in the middle of the webapp -->
+    <div v-if="!currentUser" class="auth-centered-view">
+      <AuthModal
+        :is-open="true"
+        :inline="true"
+        :initial-mode="authModalMode"
+        :error="authError"
+        :loading="isAuthLoading"
+        @submit="handleAuthSubmit"
+      />
     </div>
 
-    <!-- TAB 1: DAILY TRACKER -->
-    <section v-if="activeTab === 'tracker'" class="tracker-section">
-      <!-- Date selector (CSS Grid Calendar) -->
-      <CalendarView
-        :model-value="selectedDate"
-        @update:model-value="onDateChange"
-        @date-change="onDateChange"
-      />
-
-      <!-- Selected Date Banner -->
-      <div class="selected-date-header">
-        <span class="selected-date-icon">📌</span>
-        <span>Công việc ngày: <strong>{{ formattedSelectedDate }}</strong></span>
-      </div>
-
-      <!-- Dynamic Progress Bar -->
-      <ProgressBar :progress="progress" />
-
-      <!-- Task Creation Form -->
-      <form @submit.prevent="addTask" class="task-form">
-        <input
-          v-model="newTaskTitle"
-          type="text"
-          placeholder="Thêm thói quen hoặc công việc mới..."
-          class="task-input"
-          :disabled="isLoading"
-        />
+    <!-- CASE 2: AUTHENTICATED -> Full Daily Tracker and Analytics Dashboard -->
+    <template v-else>
+      <!-- Navigation Tabs: Tracker vs Dashboard -->
+      <nav class="view-tabs">
         <button
-          type="submit"
-          class="btn-primary"
-          :disabled="isLoading || !newTaskTitle.trim()"
+          type="button"
+          class="tab-btn"
+          :class="{ active: activeTab === 'tracker' }"
+          @click="activeTab = 'tracker'"
         >
-          <span>+</span> Thêm
+          📅 Theo dõi ngày
         </button>
-      </form>
+        <button
+          type="button"
+          class="tab-btn"
+          :class="{ active: activeTab === 'dashboard' }"
+          @click="switchTab('dashboard')"
+        >
+          📊 Báo cáo & Thống kê
+        </button>
+      </nav>
 
-      <!-- Loading State -->
-      <div v-if="isLoading" class="loading-indicator">
-        Đang tải dữ liệu...
+      <!-- Error Alert banner -->
+      <div v-if="errorMessage" class="alert-box alert-error">
+        {{ errorMessage }}
       </div>
 
-      <!-- Task List -->
-      <div v-else class="task-list-section">
-        <div v-if="tasks.length === 0" class="empty-state">
-          <div class="empty-icon">📝</div>
-          <p>Chưa có công việc nào trong ngày này.</p>
-          <p class="empty-hint">Hãy thêm công việc đầu tiên ở trên!</p>
+      <!-- TAB 1: DAILY TRACKER -->
+      <section v-if="activeTab === 'tracker'" class="tracker-section">
+        <!-- Date selector (CSS Grid Calendar) -->
+        <CalendarView
+          :model-value="selectedDate"
+          @update:model-value="onDateChange"
+          @date-change="onDateChange"
+        />
+
+        <!-- Selected Date Banner -->
+        <div class="selected-date-header">
+          <span class="selected-date-icon">📌</span>
+          <span>Công việc ngày: <strong>{{ formattedSelectedDate }}</strong></span>
         </div>
 
-        <div v-else class="task-items-wrapper">
-          <TaskItem
-            v-for="task in tasks"
-            :key="task._id"
-            :task="task"
-            @toggle="toggleTask"
-            @delete="deleteTask"
+        <!-- Dynamic Progress Bar -->
+        <ProgressBar :progress="progress" />
+
+        <!-- Task Creation Form -->
+        <form @submit.prevent="addTask" class="task-form">
+          <input
+            v-model="newTaskTitle"
+            type="text"
+            placeholder="Thêm thói quen hoặc công việc mới..."
+            class="task-input"
+            :disabled="isLoading"
           />
+          <button
+            type="submit"
+            class="btn-primary"
+            :disabled="isLoading || !newTaskTitle.trim()"
+          >
+            <span>+</span> Thêm
+          </button>
+        </form>
+
+        <!-- Loading State -->
+        <div v-if="isLoading" class="loading-indicator">
+          Đang tải dữ liệu...
         </div>
-      </div>
-    </section>
 
-    <!-- TAB 2: REVIEW & ANALYTICS DASHBOARD -->
-    <section v-else-if="activeTab === 'dashboard'" class="dashboard-section">
-      <DashboardView
-        :analytics="analyticsData"
-        :is-loading="isAnalyticsLoading"
-        @navigate-week="navigateDashboardWeek"
-      />
-    </section>
+        <!-- Task List -->
+        <div v-else class="task-list-section">
+          <div v-if="tasks.length === 0" class="empty-state">
+            <div class="empty-icon">📝</div>
+            <p>Chưa có công việc nào trong ngày này.</p>
+            <p class="empty-hint">Hãy thêm công việc đầu tiên ở trên!</p>
+          </div>
 
-    <!-- AUTHENTICATION MODAL -->
-    <AuthModal
-      :is-open="isAuthModalOpen"
-      :initial-mode="authModalMode"
-      :error="authError"
-      :loading="isAuthLoading"
-      @submit="handleAuthSubmit"
-      @close="isAuthModalOpen = false"
-    />
+          <div v-else class="task-items-wrapper">
+            <TaskItem
+              v-for="task in tasks"
+              :key="task._id"
+              :task="task"
+              @toggle="toggleTask"
+              @delete="deleteTask"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: REVIEW & ANALYTICS DASHBOARD -->
+      <section v-else-if="activeTab === 'dashboard'" class="dashboard-section">
+        <DashboardView
+          :analytics="analyticsData"
+          :is-loading="isAnalyticsLoading"
+          @navigate-week="navigateDashboardWeek"
+        />
+      </section>
+    </template>
   </main>
 </template>
 
@@ -502,5 +502,19 @@ export default {
 
 .btn-login-trigger:hover {
   background: rgba(79, 70, 229, 0.1);
+}
+
+.auth-centered-view {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 1rem 0 0.5rem;
+}
+
+.card-auth {
+  max-width: 520px;
+  margin: 0 auto;
+  transition: all 0.3s ease;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
-  <div v-if="isOpen" class="auth-modal-overlay">
-    <div class="glass-card auth-card">
+  <div v-if="isOpen" :class="inline ? 'auth-inline-container' : 'auth-modal-overlay'">
+    <div class="glass-card auth-card" :class="{ 'auth-card-inline': inline }">
       <div class="auth-header">
         <div class="auth-icon-badge">✨</div>
         <h2 class="auth-title">Daily Tracker</h2>
@@ -96,6 +96,10 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  inline: {
+    type: Boolean,
+    default: false
+  },
   initialMode: {
     type: String,
     default: 'login'
@@ -157,6 +161,15 @@ const handleSubmit = () => {
 </script>
 
 <style scoped>
+.auth-inline-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 0;
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .auth-modal-overlay {
   position: fixed;
   top: 0;
@@ -187,6 +200,13 @@ const handleSubmit = () => {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.auth-card-inline {
+  max-width: 100%;
+  box-shadow: 0 12px 32px rgba(31, 38, 135, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.88);
 }
 
 .auth-header {

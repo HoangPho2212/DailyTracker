@@ -67,4 +67,19 @@ describe('AuthModal.vue (JayContract & Glassmorphism)', () => {
     expect(wrapper.find('.auth-error-alert').exists()).toBe(true);
     expect(wrapper.find('.auth-error-alert').text()).toContain('Tên đăng nhập hoặc mật khẩu không chính xác');
   });
+
+  it('renders inline centered panel without modal overlay when inline prop is true', () => {
+    const wrapper = mount(AuthModal, {
+      props: {
+        isOpen: true,
+        inline: true,
+        initialMode: 'login'
+      }
+    });
+
+    expect(wrapper.find('.auth-modal-overlay').exists()).toBe(false);
+    expect(wrapper.find('.auth-inline-container').exists()).toBe(true);
+    expect(wrapper.find('.auth-card').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Đăng nhập');
+  });
 });
