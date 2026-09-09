@@ -378,4 +378,47 @@ const handleSubmit = () => {
   opacity: 0.65;
   cursor: not-allowed;
 }
+
+@media (max-width: 640px) {
+  .auth-card {
+    padding: 1.5rem 1.15rem;
+    border-radius: 1.25rem;
+  }
+
+  .auth-icon-badge {
+    width: 48px;
+    height: 48px;
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .auth-title {
+    font-size: 1.35rem;
+  }
+
+  .auth-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .auth-tabs {
+    margin-bottom: 1.15rem;
+  }
+
+  .auth-tab-btn {
+    padding: 0.5rem;
+    font-size: 0.88rem;
+  }
+
+  .input-wrapper .glass-input {
+    font-size: 16px !important;
+    padding: 0.7rem 0.85rem 0.7rem 2.4rem;
+    min-height: 46px;
+  }
+
+  .auth-submit-btn {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+    min-height: 46px;
+  }
+}
 </style>

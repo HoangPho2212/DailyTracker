@@ -114,12 +114,15 @@ export default {
   color: #64748b;
   cursor: pointer;
   padding: 8px;
+  min-width: 38px;
+  min-height: 38px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
+  touch-action: manipulation;
 }
 
 .delete-btn:hover {
@@ -132,5 +135,29 @@ export default {
 
 .delete-btn:active {
   transform: translateY(0);
+}
+
+@media (max-width: 640px) {
+  .task-item {
+    padding: 0.75rem 0.85rem;
+    gap: 0.65rem;
+    border-radius: 14px;
+    margin-bottom: 0.65rem;
+    min-height: 50px;
+  }
+
+  .task-title {
+    font-size: 0.92rem;
+  }
+
+  .checkbox-container input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+  }
+
+  .delete-btn {
+    min-width: 40px;
+    min-height: 40px;
+  }
 }
 </style>

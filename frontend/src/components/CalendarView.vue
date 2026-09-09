@@ -399,4 +399,86 @@ export default {
 .day-cell.is-selected .today-indicator {
   background-color: #ffffff;
 }
+
+@media (max-width: 640px) {
+  .calendar-container {
+    padding: 0.85rem 0.65rem;
+    border-radius: 18px;
+    margin-bottom: 1.25rem;
+  }
+
+  .calendar-header {
+    margin-bottom: 0.85rem;
+  }
+
+  .calendar-month-title {
+    font-size: 0.95rem;
+    min-width: 110px;
+  }
+
+  .month-nav-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+  }
+
+  .today-btn {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.78rem;
+    border-radius: 8px;
+  }
+
+  .weekdays-grid {
+    gap: 4px;
+    margin-bottom: 0.5rem;
+  }
+
+  .weekday-cell {
+    font-size: 0.72rem;
+    padding: 0.2rem 0;
+  }
+
+  .days-grid {
+    gap: 4px;
+  }
+
+  .day-cell {
+    border-radius: 8px;
+    font-size: 0.88rem;
+    min-height: 36px;
+  }
+
+  .today-indicator {
+    bottom: 3px;
+    width: 4px;
+    height: 4px;
+  }
+}
+
+@media (max-width: 380px) {
+  .calendar-container {
+    padding: 0.65rem 0.45rem;
+  }
+
+  .month-nav-group {
+    gap: 0.35rem;
+  }
+
+  .calendar-month-title {
+    font-size: 0.88rem;
+    min-width: 95px;
+  }
+
+  .days-grid,
+  .weekdays-grid {
+    gap: 3px;
+  }
+
+  .day-cell {
+    font-size: 0.82rem;
+    min-height: 32px;
+    border-radius: 6px;
+  }
+}
 </style>

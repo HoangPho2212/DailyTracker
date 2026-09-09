@@ -517,4 +517,55 @@ export default {
   margin: 0 auto;
   transition: all 0.3s ease;
 }
+
+@media (max-width: 640px) {
+  .view-tabs {
+    padding: 4px;
+    margin-bottom: 1.25rem;
+    border-radius: 14px;
+  }
+
+  .tab-btn {
+    padding: 0.55rem 0.5rem;
+    font-size: 0.85rem;
+    border-radius: 10px;
+    min-height: 42px;
+  }
+
+  .selected-date-header {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.82rem;
+    border-radius: 12px;
+    margin-bottom: 0.85rem;
+  }
+
+  .selected-date-icon {
+    font-size: 1rem;
+  }
+
+  .header-top-row {
+    margin-bottom: 0.4rem;
+  }
+
+  .user-session-badge {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.8rem;
+  }
+
+  .btn-logout {
+    font-size: 0.76rem;
+    padding: 0.15rem 0.35rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .tab-btn {
+    font-size: 0.78rem;
+    padding: 0.45rem 0.35rem;
+  }
+
+  .selected-date-header {
+    font-size: 0.78rem;
+  }
+}
 </style>

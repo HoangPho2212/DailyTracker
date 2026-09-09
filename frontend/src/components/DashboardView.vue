@@ -487,4 +487,137 @@ export default {
   color: #475569;
   font-weight: 700;
 }
+
+@media (max-width: 640px) {
+  .week-nav-bar {
+    padding: 0.65rem 0.85rem;
+    border-radius: 14px;
+    margin-bottom: 1rem;
+  }
+
+  .week-range-label {
+    font-size: 0.82rem;
+  }
+
+  .nav-week-btn {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.78rem;
+    border-radius: 8px;
+  }
+
+  .comparison-card {
+    padding: 1.15rem 0.85rem;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+  }
+
+  .comparison-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .comparison-title {
+    font-size: 1rem;
+  }
+
+  .comparison-message {
+    font-size: 0.88rem;
+    margin-bottom: 1rem;
+  }
+
+  .week-compare-grid {
+    gap: 0.65rem;
+  }
+
+  .compare-box {
+    padding: 0.75rem 0.5rem;
+    border-radius: 12px;
+  }
+
+  .compare-rate {
+    font-size: 1.45rem;
+  }
+
+  .compare-label {
+    font-size: 0.72rem;
+  }
+
+  .compare-sub {
+    font-size: 0.72rem;
+  }
+
+  .section-card {
+    padding: 1.15rem 0.85rem;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+  }
+
+  .daily-stat-row {
+    gap: 0.5rem;
+  }
+
+  .day-meta {
+    width: 58px;
+    gap: 0.2rem;
+  }
+
+  .day-dow {
+    font-size: 0.85rem;
+  }
+
+  .day-date {
+    font-size: 0.7rem;
+  }
+
+  .day-numbers {
+    min-width: 65px;
+    font-size: 0.78rem;
+  }
+
+  .day-count {
+    font-size: 0.72rem;
+  }
+
+  .month-stats-grid {
+    gap: 0.5rem;
+  }
+
+  .month-stat-item {
+    padding: 0.75rem 0.35rem;
+    border-radius: 12px;
+  }
+
+  .month-stat-val {
+    font-size: 1.15rem;
+  }
+
+  .month-stat-label {
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .week-compare-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .month-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .day-meta {
+    width: 50px;
+  }
+
+  .day-numbers {
+    min-width: 55px;
+  }
+}
 </style>
