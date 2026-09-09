@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const dayController = require('../controllers/dayController');
+const authMiddleware = require('../middleware/auth');
+
+// Protect all /api/days routes with JWT authentication
+router.use(authMiddleware);
 
 // Analytics route (placed before /:date)
 router.get('/analytics/summary', dayController.getAnalyticsSummary);

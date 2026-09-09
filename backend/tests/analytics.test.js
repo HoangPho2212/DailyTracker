@@ -1,23 +1,39 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const { app } = require('../app');
 const Day = require('../models/Day');
+const User = require('../models/User');
 
 const TEST_MONGO_URI = process.env.MONGO_URI_TEST || 'mongodb://127.0.0.1:27017/dailytracker_test';
+const JWT_SECRET = process.env.JWT_SECRET || 'dailytracker_jwt_secret_key_2026';
+
+let testUserId;
+let testToken;
+
+const authReq = {
+  get: (url) => request(app).get(url).set('Authorization', `Bearer ${testToken}`)
+};
 
 beforeAll(async () => {
   if (mongoose.connection.readyState !== 0) {
     await mongoose.disconnect();
   }
   await mongoose.connect(TEST_MONGO_URI);
+  await Day.syncIndexes();
+  await User.syncIndexes();
+  testUserId = new mongoose.Types.ObjectId();
+  testToken = jwt.sign({ userId: testUserId.toString(), username: 'tester' }, JWT_SECRET);
 });
 
 beforeEach(async () => {
   await Day.deleteMany({});
+  await User.deleteMany({});
 });
 
 afterAll(async () => {
   await Day.deleteMany({});
+  await User.deleteMany({});
   await mongoose.connection.close();
 });
 
@@ -26,6 +42,7 @@ describe('Analytics & Review API Contracts', () => {
     it('computes week-over-week comparison and monthly metrics accurately', async () => {
       // Setup previous week (Monday 2026-08-31 to Sunday 2026-09-06)
       await Day.create({
+        userId: testUserId,
         date: '2026-09-01',
         tasks: [
           { title: 'Task P1', isCompleted: true },
@@ -34,6 +51,7 @@ describe('Analytics & Review API Contracts', () => {
       });
 
       await Day.create({
+        userId: testUserId,
         date: '2026-09-02',
         tasks: [
           { title: 'Task P3', isCompleted: true },
@@ -43,6 +61,7 @@ describe('Analytics & Review API Contracts', () => {
 
       // Setup current week (Monday 2026-09-07 to Sunday 2026-09-13)
       await Day.create({
+        userId: testUserId,
         date: '2026-09-07',
         tasks: [
           { title: 'Task C1', isCompleted: true },
@@ -53,6 +72,7 @@ describe('Analytics & Review API Contracts', () => {
       });
 
       await Day.create({
+        userId: testUserId,
         date: '2026-09-08',
         tasks: [
           { title: 'Task C5', isCompleted: true },
@@ -62,7 +82,7 @@ describe('Analytics & Review API Contracts', () => {
         ] // 3/4 = 75%
       });
 
-      const res = await request(app).get('/api/days/analytics/summary?date=2026-09-08');
+      const res = await authReq.get('/api/days/analytics/summary?date=2026-09-08');
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -103,7 +123,7 @@ describe('Analytics & Review API Contracts', () => {
     });
 
     it('handles empty database gracefully with 0% rates and equal status', async () => {
-      const res = await request(app).get('/api/days/analytics/summary?date=2026-09-08');
+      const res = await authReq.get('/api/days/analytics/summary?date=2026-09-08');
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -114,7 +134,7 @@ describe('Analytics & Review API Contracts', () => {
     });
 
     it('rejects invalid date query string with 400', async () => {
-      const res = await request(app).get('/api/days/analytics/summary?date=bad-date');
+      const res = await authReq.get('/api/days/analytics/summary?date=bad-date');
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
       expect(res.body.errorCode).toBe('INVALID_DATE_FORMAT');

@@ -78,9 +78,14 @@ exports.getAnalyticsSummary = async (req, res) => {
     const earliestDate = formatDateUTC(prevMon) < monthFirstDay ? formatDateUTC(prevMon) : monthFirstDay;
     const latestDate = formatDateUTC(currSun) > monthLastDay ? formatDateUTC(currSun) : monthLastDay;
 
-    const daysDocs = await Day.find({
+    const query = {
       date: { $gte: earliestDate, $lte: latestDate }
-    });
+    };
+    if (req.user && req.user.userId) {
+      query.userId = req.user.userId;
+    }
+
+    const daysDocs = await Day.find(query);
 
     const dayMap = new Map();
     daysDocs.forEach((doc) => {
@@ -217,7 +222,12 @@ exports.getDay = async (req, res) => {
       return sendError(res, 400, 'Invalid date format. Expected YYYY-MM-DD.', 'INVALID_DATE_FORMAT');
     }
 
-    const day = await Day.findOne({ date });
+    const query = { date };
+    if (req.user && req.user.userId) {
+      query.userId = req.user.userId;
+    }
+
+    const day = await Day.findOne(query);
     if (!day) {
       return sendSuccess(res, 200, { date, tasks: [] }, 'No tasks found for date');
     }
@@ -245,9 +255,18 @@ exports.addTask = async (req, res) => {
       return sendError(res, 400, 'Task title cannot be empty.', 'VALIDATION_ERROR');
     }
 
-    let day = await Day.findOne({ date });
+    const query = { date };
+    if (req.user && req.user.userId) {
+      query.userId = req.user.userId;
+    }
+
+    let day = await Day.findOne(query);
     if (!day) {
-      day = new Day({ date, tasks: [] });
+      day = new Day({
+        userId: req.user ? req.user.userId : undefined,
+        date,
+        tasks: []
+      });
     }
 
     day.tasks.push({
@@ -280,7 +299,12 @@ exports.updateTask = async (req, res) => {
       return sendError(res, 404, 'Invalid task ID.', 'NOT_FOUND');
     }
 
-    const day = await Day.findOne({ date });
+    const query = { date };
+    if (req.user && req.user.userId) {
+      query.userId = req.user.userId;
+    }
+
+    const day = await Day.findOne(query);
     if (!day) {
       return sendError(res, 404, 'Day not found.', 'NOT_FOUND');
     }
@@ -316,6 +340,7 @@ exports.updateTask = async (req, res) => {
 exports.deleteTask = async (req, res) => {
   try {
     const { date, taskId } = req.params;
+    const userId = req.user ? req.user.userId : null;
 
     if (!isValidDate(date)) {
       return sendError(res, 400, 'Invalid date format. Expected YYYY-MM-DD.', 'INVALID_DATE_FORMAT');
@@ -325,14 +350,19 @@ exports.deleteTask = async (req, res) => {
       return sendError(res, 404, 'Invalid task ID.', 'NOT_FOUND');
     }
 
-    const day = await Day.findOne({ date });
+    const query = { date };
+    if (userId) {
+      query.userId = userId;
+    }
+
+    const day = await Day.findOne(query);
     if (!day) {
       return sendError(res, 404, 'Day not found.', 'NOT_FOUND');
     }
 
     const task = day.tasks.id(taskId);
     if (!task) {
-      return sendError(res, 404, 'Task not found.', 'NOT_FOUND');
+      return sendError(res, 404, 'Task not found in specified day.', 'NOT_FOUND');
     }
 
     day.tasks.pull(taskId);
@@ -350,10 +380,13 @@ exports.deleteTask = async (req, res) => {
  */
 exports.getAllDays = async (req, res) => {
   try {
-    const days = await Day.find({}).sort({ date: 1 });
+    const query = {};
+    if (req.user && req.user.userId) {
+      query.userId = req.user.userId;
+    }
+    const days = await Day.find(query).sort({ date: 1 });
     return sendSuccess(res, 200, days, 'All days retrieved successfully');
   } catch (error) {
     return sendError(res, 500, error.message, 'INTERNAL_SERVER_ERROR');
   }
 };
-

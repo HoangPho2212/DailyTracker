@@ -15,6 +15,7 @@ const seedMockData = async () => {
   try {
     console.log(`Connecting to MongoDB for seeding: ${MONGO_URI}...`);
     await mongoose.connect(MONGO_URI);
+    await Day.syncIndexes();
 
     console.log('Clearing existing Day records...');
     await Day.deleteMany({});

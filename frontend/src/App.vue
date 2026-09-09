@@ -1,6 +1,21 @@
 <template>
   <main class="card">
     <header class="app-header">
+      <div class="header-top-row">
+        <div v-if="currentUser" class="user-session-badge">
+          <span class="user-avatar-icon">👤</span>
+          <span class="user-name">{{ currentUser.username }}</span>
+          <button type="button" class="btn-logout" @click="handleLogout" title="Đăng xuất">
+            Đăng xuất
+          </button>
+        </div>
+        <div v-else class="user-session-badge login-trigger-badge">
+          <button type="button" class="btn-login-trigger" @click="openAuthModal('login')">
+            🔑 Đăng nhập / Đăng ký
+          </button>
+        </div>
+      </div>
+
       <h1 class="app-title">
         <span>📅</span> Daily Tracker
       </h1>
@@ -101,6 +116,16 @@
         @navigate-week="navigateDashboardWeek"
       />
     </section>
+
+    <!-- AUTHENTICATION MODAL -->
+    <AuthModal
+      :is-open="isAuthModalOpen"
+      :initial-mode="authModalMode"
+      :error="authError"
+      :loading="isAuthLoading"
+      @submit="handleAuthSubmit"
+      @close="isAuthModalOpen = false"
+    />
   </main>
 </template>
 
@@ -110,6 +135,7 @@ import CalendarView from './components/CalendarView.vue';
 import ProgressBar from './components/ProgressBar.vue';
 import TaskItem from './components/TaskItem.vue';
 import DashboardView from './components/DashboardView.vue';
+import AuthModal from './components/AuthModal.vue';
 
 export default {
   name: 'App',
@@ -117,7 +143,8 @@ export default {
     CalendarView,
     ProgressBar,
     TaskItem,
-    DashboardView
+    DashboardView,
+    AuthModal
   },
   data() {
     const now = new Date();
@@ -135,7 +162,14 @@ export default {
       errorMessage: null,
       dashboardDate: today,
       analyticsData: null,
-      isAnalyticsLoading: false
+      isAnalyticsLoading: false,
+
+      // Authentication State
+      currentUser: apiService.getCurrentUser(),
+      isAuthModalOpen: !apiService.getToken(),
+      authModalMode: 'login',
+      authError: '',
+      isAuthLoading: false
     };
   },
   computed: {
@@ -161,9 +195,74 @@ export default {
     }
   },
   mounted() {
-    this.fetchTasks();
+    window.addEventListener('auth:unauthorized', this.onUnauthorized);
+    if (this.currentUser && apiService.getToken()) {
+      this.verifySessionAndFetch();
+    } else {
+      this.isAuthModalOpen = true;
+    }
+  },
+  beforeUnmount() {
+    window.removeEventListener('auth:unauthorized', this.onUnauthorized);
   },
   methods: {
+    onUnauthorized() {
+      this.currentUser = null;
+      this.tasks = [];
+      this.analyticsData = null;
+      this.isAuthModalOpen = true;
+      this.authError = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+    },
+
+    openAuthModal(mode = 'login') {
+      this.authModalMode = mode;
+      this.authError = '';
+      this.isAuthModalOpen = true;
+    },
+
+    async verifySessionAndFetch() {
+      try {
+        const user = await apiService.getMe();
+        this.currentUser = user;
+        localStorage.setItem('dailytracker_user', JSON.stringify(user));
+        this.fetchTasks();
+      } catch {
+        this.onUnauthorized();
+      }
+    },
+
+    async handleAuthSubmit({ mode, username, password }) {
+      this.isAuthLoading = true;
+      this.authError = '';
+      try {
+        let result;
+        if (mode === 'register') {
+          result = await apiService.register(username, password);
+        } else {
+          result = await apiService.login(username, password);
+        }
+        this.currentUser = result.user;
+        this.isAuthModalOpen = false;
+        this.fetchTasks();
+        if (this.activeTab === 'dashboard') {
+          this.fetchAnalytics();
+        }
+      } catch (err) {
+        this.authError = err.message || 'Xác thực không thành công';
+      } finally {
+        this.isAuthLoading = false;
+      }
+    },
+
+    handleLogout() {
+      apiService.logout();
+      this.currentUser = null;
+      this.tasks = [];
+      this.analyticsData = null;
+      this.authModalMode = 'login';
+      this.authError = '';
+      this.isAuthModalOpen = true;
+    },
     switchTab(tab) {
       this.activeTab = tab;
       if (tab === 'dashboard') {
@@ -340,5 +439,68 @@ export default {
 
 .task-items-wrapper {
   margin-top: 1.25rem;
+}
+
+.header-top-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.65rem;
+}
+
+.user-session-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1e293b;
+  box-shadow: 0 4px 12px rgba(31, 38, 135, 0.05);
+}
+
+.user-avatar-icon {
+  font-size: 0.95rem;
+}
+
+.user-name {
+  color: #4338ca;
+  font-weight: 700;
+}
+
+.btn-logout {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.btn-login-trigger {
+  background: transparent;
+  border: none;
+  color: #4f46e5;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-login-trigger:hover {
+  background: rgba(79, 70, 229, 0.1);
 }
 </style>

@@ -13,6 +13,30 @@ const apiClient = axios.create({
   }
 });
 
+// Request interceptor: attach JWT bearer token if present
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('dailytracker_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Response interceptor: handle 401 unauthorized
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('dailytracker_token');
+      localStorage.removeItem('dailytracker_user');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Helper to handle JayContract response
 const handleResponse = (response) => {
   if (response.data && response.data.success !== undefined) {
@@ -63,6 +87,52 @@ export const apiService = {
   async getAnalyticsSummary(date) {
     const url = date ? `/api/days/analytics/summary?date=${date}` : '/api/days/analytics/summary';
     const response = await apiClient.get(url);
+    return handleResponse(response);
+  },
+
+  /**
+   * Authentication methods
+   */
+  async login(username, password) {
+    const response = await apiClient.post('/api/auth/login', { username, password });
+    const data = handleResponse(response);
+    if (data.token) {
+      localStorage.setItem('dailytracker_token', data.token);
+      localStorage.setItem('dailytracker_user', JSON.stringify(data.user));
+    }
+    return data;
+  },
+
+  async register(username, password) {
+    const response = await apiClient.post('/api/auth/register', { username, password });
+    const data = handleResponse(response);
+    if (data.token) {
+      localStorage.setItem('dailytracker_token', data.token);
+      localStorage.setItem('dailytracker_user', JSON.stringify(data.user));
+    }
+    return data;
+  },
+
+  logout() {
+    localStorage.removeItem('dailytracker_token');
+    localStorage.removeItem('dailytracker_user');
+  },
+
+  getCurrentUser() {
+    try {
+      const userStr = localStorage.getItem('dailytracker_user');
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  getToken() {
+    return localStorage.getItem('dailytracker_token');
+  },
+
+  async getMe() {
+    const response = await apiClient.get('/api/auth/me');
     return handleResponse(response);
   }
 };
