@@ -17,6 +17,17 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'Daily Tracker API' });
 });
 
+// Serve frontend static build if present (for single-container/monolith deployment)
+const path = require('path');
+const fs = require('fs');
+const distPath = path.join(__dirname, '../frontend/dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get(/^\/(?!api|health).*/, (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
+
 // Standard 404 handler (JayContract)
 app.use((req, res) => {
   res.status(404).json({

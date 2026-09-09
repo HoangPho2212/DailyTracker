@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Database Service
+  mongo:
+    image: mongo:7
+    container_name: dailytracker_mongo
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - tracker-network
+
+  # Backend Express API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dailytracker_backend
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://mongo:27017/dailytracker
+      - NODE_ENV=production
+    depends_on:
+      - mongo
+    networks:
+      - tracker-network
+
+  # Frontend Vue 3 + Nginx Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: dailytracker_frontend
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+    depends_on:
+      - backend
+    networks:
+      - tracker-network
+
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  tracker-network:
+    driver: bridge
